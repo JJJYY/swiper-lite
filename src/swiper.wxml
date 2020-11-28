@@ -1,0 +1,13 @@
+<wxs src="./helper/swiper.wxs" module="swiper" />
+<view
+    class="swiper"
+    bindtouchstart="{{ swiper.touchstart }}"
+    bindtouchmove="{{ swiper.touchstart }}"
+    bindtouchend="{{ swiper.touchend }}"
+    bindtouchcancel="{{ swiper.touchcancel }}"
+    data-windowWidth="{{ windowWidth }}"
+    data-windowHeight="{{ windowHeight }}"
+    style="height:{{windowHeight}}px;"
+>
+    <item />
+</view>

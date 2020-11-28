@@ -1,0 +1,26 @@
+/* eslint-disable */
+
+function touchstart (event, ownerInstance) {
+    // var owner = event.instance.selectOwnerComponent()
+    var items = ownerInstance.selectAllComponents('.swiper-id')
+    console.log(JSON.stringify(items))
+}
+
+function touchmove () {
+    
+}
+
+function touchend () {
+    
+}
+
+function touchcancel () {
+    
+}
+
+module.exports = {
+    touchstart: touchstart,
+    touchmove: touchmove,
+    touchend: touchend,
+    touchcancel: touchcancel
+}

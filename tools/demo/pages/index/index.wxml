@@ -1,0 +1,41 @@
+<swiper>
+    <swiper-item>
+        <view style="background: red;height:200px;" />
+    </swiper-item>
+    <swiper-item>
+        <view style="background: yellow;height:200px;" />
+    </swiper-item>
+    <swiper-item>
+        <view style="background: blue;height:200px;" />
+    </swiper-item>
+    <swiper-item>
+        <view style="background: green;height:200px;" />
+    </swiper-item>
+    <swiper-item>
+        <view style="background: black;height:200px;" />
+    </swiper-item>
+</swiper>
+<view style="background:#000;height:50px;" />
+<swiper-lite>
+    <swiper-lite-item id="swiper-id">
+        <view style="background: red;height:200px;" />
+    </swiper-lite-item>
+    <swiper-lite-item id="swiper-id">
+        <view style="background: yellow;height:200px;" />
+    </swiper-lite-item>
+    <swiper-lite-item id="swiper-id">
+        <view style="background: blue;height:200px;" />
+    </swiper-lite-item>
+    <!-- <swiper-lite-item>
+        <view style="background: yellow" />
+    </swiper-lite-item>
+    <swiper-lite-item>
+        <view style="background: blue" />
+    </swiper-lite-item>
+    <swiper-lite-item>
+        <view style="background: green" />
+    </swiper-lite-item>
+    <swiper-lite-item>
+        <view style="background: black" />
+    </swiper-lite-item> -->
+</swiper-lite>

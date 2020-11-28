@@ -1,0 +1,5 @@
+<view
+    class="swiper-lite-item"
+>
+    <slot />
+</view>
