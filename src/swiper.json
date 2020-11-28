@@ -1,9 +1,8 @@
 {
   "component": true,
   "usingComponents": {
-    "swiper-item": "./swiper-item"
   },
   "componentGenerics": {
-    "item": true
+    "swiper-lite-item": true
   }
 }

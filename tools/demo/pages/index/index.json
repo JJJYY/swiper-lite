@@ -1,5 +1,6 @@
 {
   "usingComponents": {
-    "swiper-lite": "../../components/swiper"
+    "swiper-lite": "../../components/swiper-lite",
+    "swiper-lite-item": "./components/swiper-item"
   }
 }

@@ -1,5 +1,5 @@
 <view
     class="swiper-lite-item"
 >
-    <slot />
+    <view style="background:{{ color }};height:80px;">{{ data }}</view>
 </view>

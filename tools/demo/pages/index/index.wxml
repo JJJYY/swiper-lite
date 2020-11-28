@@ -16,16 +16,7 @@
     </swiper-item>
 </swiper>
 <view style="background:#000;height:50px;" />
-<swiper-lite>
-    <swiper-lite-item id="swiper-id">
-        <view style="background: red;height:200px;" />
-    </swiper-lite-item>
-    <swiper-lite-item id="swiper-id">
-        <view style="background: yellow;height:200px;" />
-    </swiper-lite-item>
-    <swiper-lite-item id="swiper-id">
-        <view style="background: blue;height:200px;" />
-    </swiper-lite-item>
+<swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ [1, 2, 3] }}">
     <!-- <swiper-lite-item>
         <view style="background: yellow" />
     </swiper-lite-item>

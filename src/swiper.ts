@@ -4,6 +4,11 @@ const systemInfo = getSystemInfo()
 
 Component({
   properties: {
+    data: Array,
+    width: {
+      type: Number,
+      value: systemInfo.windowWidth
+    }
   },
   data: {
     windowWidth: systemInfo.windowWidth,

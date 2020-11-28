@@ -1,0 +1,8 @@
+.swiper {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.swiper-lite-item {
+    display: inline-block;
+}

@@ -1,21 +1,89 @@
 /* eslint-disable */
 
+var swiperLiteItems = []
+var startXY = [0, 0]
+var startTime = 0
+var offsetXCache = []
+var offsetYCache = []
 function touchstart (event, ownerInstance) {
-    // var owner = event.instance.selectOwnerComponent()
-    var items = ownerInstance.selectAllComponents('.swiper-id')
-    console.log(JSON.stringify(items))
+    console.log('touchstart')
+
+    swiperLiteItems = ownerInstance.selectAllComponents('.swiper-lite-item')
+    startTime = Date.now()
+    var touch = event.touches[0]
+    if (touch) {
+        startXY = [ touch.pageX, touch.pageY ]
+        console.log(startXY)
+    }
 }
 
-function touchmove () {
+function touchmove (event, ownerInstance) {
+    console.log('touchmove')
     
+    var touch = event.touches[0]
+    var offsetX = touch.pageX - startXY[0]
+    var width = event.currentTarget.dataset.width
+    
+    for (var i = 0; i < swiperLiteItems.length; i++) {
+        offsetX = (offsetXCache[i] || 0) + offsetX
+
+        var item = swiperLiteItems[i]
+        if (item) {
+            item.setStyle({
+                transform: 'translate(' + offsetX + 'px)'
+            })
+        }
+    }
 }
 
-function touchend () {
+function touchend (event, ownerInstance) {
+    var touch = event.changedTouches[0]
+    var offsetX = touch.pageX - startXY[0]
+    var time = Date.now() - startTime
+    var width = event.currentTarget.dataset.width
+
+    if (
+        Math.abs(offsetX) > 200 ||
+        (time < 200 && Math.abs(offsetX) > 30)
+    ) {
+        if (offsetX > 0) {
+            console.log('上一个', offsetX, width)
     
+            for (var i = 0; i < swiperLiteItems.length; i++) {
+                offsetX = (offsetXCache[i] || 0) + width
+
+                var item = swiperLiteItems[i]
+                if (item) {
+                    item.setStyle({
+                        transform: 'translate(' + offsetX + 'px)'
+                    })
+                }
+
+                offsetXCache[i] = offsetX
+            }
+        } else {
+    
+            for (var i = 0; i < swiperLiteItems.length; i++) {
+                offsetX = (offsetXCache[i] || 0) - width
+
+                console.log('下一个', offsetX, width)
+                var item = swiperLiteItems[i]
+                if (item) {
+                    item.setStyle({
+                        transform: 'translate(' + offsetX + 'px)'
+                    })
+                }
+
+                offsetXCache[i] = offsetX
+            }
+        }
+    } else {
+        console.log('不切换数据', offsetX)
+    }
 }
 
 function touchcancel () {
-    
+    console.log('touchcancel')
 }
 
 module.exports = {

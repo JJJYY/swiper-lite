@@ -2,12 +2,16 @@
 <view
     class="swiper"
     bindtouchstart="{{ swiper.touchstart }}"
-    bindtouchmove="{{ swiper.touchstart }}"
+    bindtouchmove="{{ swiper.touchmove }}"
     bindtouchend="{{ swiper.touchend }}"
     bindtouchcancel="{{ swiper.touchcancel }}"
+    data-width="{{ width }}"
+    data-height="{{ height }}"
     data-windowWidth="{{ windowWidth }}"
     data-windowHeight="{{ windowHeight }}"
-    style="height:{{windowHeight}}px;"
+    style="width:{{width}}px;height:{{windowHeight}}px;"
 >
-    <item />
+    <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{width}}px">
+        <swiper-lite-item data="{{ item }}"/>
+    </view>
 </view>
