@@ -1,17 +1,20 @@
 <wxs src="./helper/swiper.wxs" module="swiper" />
 <view
-    class="swiper"
-    bindtouchstart="{{ swiper.touchstart }}"
-    bindtouchmove="{{ swiper.touchmove }}"
-    bindtouchend="{{ swiper.touchend }}"
-    bindtouchcancel="{{ swiper.touchcancel }}"
-    data-width="{{ width }}"
-    data-height="{{ height }}"
-    data-windowWidth="{{ windowWidth }}"
-    data-windowHeight="{{ windowHeight }}"
-    style="width:{{width}}px;height:{{windowHeight}}px;"
+    style="width:{{width}}px;overflow:hidden;"
 >
-    <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{width}}px">
-        <swiper-lite-item data="{{ item }}"/>
+    <view
+        class="swiper-lite"
+        bindtouchstart="{{ swiper.touchstart }}"
+        bindtouchmove="{{ swiper.touchmove }}"
+        bindtouchend="{{ swiper.touchend }}"
+        bindtouchcancel="{{ swiper.touchcancel }}"
+        data-width="{{ width }}"
+        data-height="{{ height }}"
+        data-current="{{ current }}"
+        style="width:{{width * data.length}}px;"
+    >
+        <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{width}}px">
+            <swiper-lite-item data="{{ index }}"/>
+        </view>
     </view>
 </view>

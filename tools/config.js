@@ -92,5 +92,5 @@ module.exports = {
     }
   },
 
-  copy: ['./assets', './helper'], // 将会复制到目标目录
+  copy: ['./helper'], // 将会复制到目标目录
 }

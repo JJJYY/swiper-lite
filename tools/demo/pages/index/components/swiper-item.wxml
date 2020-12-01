@@ -1,5 +1,5 @@
 <view
     class="swiper-lite-item"
 >
-    <view style="background:{{ color }};height:80px;">{{ data }}</view>
+    <view style="background:{{ color }};height:200px;font-size: 50px;color:#fff;text-align:center;line-height:200px;">{{ data }}</view>
 </view>

@@ -13,6 +13,7 @@ Component({
   data: {
     windowWidth: systemInfo.windowWidth,
     windowHeight: systemInfo.windowHeight,
+    current: 0
   },
   lifetimes: {
     created() {

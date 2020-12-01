@@ -1,39 +1,91 @@
 /* eslint-disable */
 
+var swiperContainer = null
 var swiperLiteItems = []
 var startXY = [0, 0]
 var startTime = 0
-var offsetXCache = []
-var offsetYCache = []
-function touchstart (event, ownerInstance) {
-    console.log('touchstart')
+var offsetCache = []
+var requestAnimationFrame = function () {}
 
+function transformSwiper (offset, hooks) {
+    if (hooks.before) hooks.before(offset)
+
+    // for (var i = 0; i < swiperLiteItems.length; i++) {
+    //     if (hooks.beforeEach) hooks.beforeEach(offset, i, swiperLiteItems[i])
+    //
+    //     var item = swiperLiteItems[i]
+    //     if (item) {
+    //         item.setStyle({
+    //             transform: 'translate(' + offset[0] + 'px)'
+    //         })
+    //     }
+    //
+    //     if (hooks.afterEach) hooks.afterEach(offset, i, swiperLiteItems[i])
+    // }
+
+    swiperContainer.setStyle({
+        transform: 'translate(' + offset[0] + 'px)'
+    })
+
+    if (hooks.after) hooks.after(offset)
+}
+
+function createAnimationTransform(time, current, target) {
+    var lastTime = 0
+    var leftOffsetX = target[0]
+    // var offsetY = offset[1]
+
+    function animation (onAnimationEnd) {
+        var now = Date.now()
+        if (lastTime <= 0) {
+            lastTime = now
+            animation(onAnimationEnd)
+            return
+        }
+
+        requestAnimationFrame(function () {
+            var duration = now - lastTime
+            var offsetX = (target[0] - current[0]) * Math.min(1, (duration / time))
+
+            transformSwiper([ current[0] + offsetX ], {
+                after: function () {
+                    leftOffsetX -= offsetX
+                }
+            })
+
+            if (duration > time) {
+                onAnimationEnd && onAnimationEnd()
+            } else {
+                animation(onAnimationEnd)
+            }
+        })
+    }
+
+    return animation
+}
+
+function touchstart (event, ownerInstance) {
+    swiperContainer = ownerInstance.selectComponent('.swiper-lite')
     swiperLiteItems = ownerInstance.selectAllComponents('.swiper-lite-item')
+    requestAnimationFrame = ownerInstance.requestAnimationFrame
     startTime = Date.now()
     var touch = event.touches[0]
     if (touch) {
         startXY = [ touch.pageX, touch.pageY ]
-        console.log(startXY)
     }
 }
 
 function touchmove (event, ownerInstance) {
-    console.log('touchmove')
-    
     var touch = event.touches[0]
     var offsetX = touch.pageX - startXY[0]
-    var width = event.currentTarget.dataset.width
-    
-    for (var i = 0; i < swiperLiteItems.length; i++) {
-        offsetX = (offsetXCache[i] || 0) + offsetX
+    // var width = event.currentTarget.dataset.width
 
-        var item = swiperLiteItems[i]
-        if (item) {
-            item.setStyle({
-                transform: 'translate(' + offsetX + 'px)'
-            })
+    transformSwiper([ offsetX ], {
+        before: function (offset) {
+            console.log(JSON.stringify(offsetCache))
+            offset[0] = (offsetCache[0] || 0) + offset[0]
         }
-    }
+    })
 }
 
 function touchend (event, ownerInstance) {
@@ -44,51 +96,26 @@ function touchend (event, ownerInstance) {
 
     if (
         Math.abs(offsetX) > 200 ||
-        (time < 200 && Math.abs(offsetX) > 30)
+        Math.abs(offsetX) / time >= 0.5
     ) {
         if (offsetX > 0) {
-            console.log('上一个', offsetX, width)
-    
-            for (var i = 0; i < swiperLiteItems.length; i++) {
-                offsetX = (offsetXCache[i] || 0) + width
-
-                var item = swiperLiteItems[i]
-                if (item) {
-                    item.setStyle({
-                        transform: 'translate(' + offsetX + 'px)'
-                    })
-                }
-
-                offsetXCache[i] = offsetX
-            }
+            createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0) + width])(function () {
+                offsetCache[0] = (offsetCache[0] || 0) + width
+            })
         } else {
-    
-            for (var i = 0; i < swiperLiteItems.length; i++) {
-                offsetX = (offsetXCache[i] || 0) - width
-
-                console.log('下一个', offsetX, width)
-                var item = swiperLiteItems[i]
-                if (item) {
-                    item.setStyle({
-                        transform: 'translate(' + offsetX + 'px)'
-                    })
-                }
-
-                offsetXCache[i] = offsetX
-            }
+            createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0) + width * -1])(function () {
+                offsetCache[0] = (offsetCache[0] || 0) + width * -1
+            })
         }
     } else {
-        console.log('不切换数据', offsetX)
+        createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0)])(function () {
+        })
     }
-}
-
-function touchcancel () {
-    console.log('touchcancel')
 }
 
 module.exports = {
     touchstart: touchstart,
     touchmove: touchmove,
     touchend: touchend,
-    touchcancel: touchcancel
+    touchcancel: touchend
 }

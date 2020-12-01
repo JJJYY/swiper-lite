@@ -1,32 +1,8 @@
 <swiper>
-    <swiper-item>
-        <view style="background: red;height:200px;" />
-    </swiper-item>
-    <swiper-item>
-        <view style="background: yellow;height:200px;" />
-    </swiper-item>
-    <swiper-item>
-        <view style="background: blue;height:200px;" />
-    </swiper-item>
-    <swiper-item>
-        <view style="background: green;height:200px;" />
-    </swiper-item>
-    <swiper-item>
-        <view style="background: black;height:200px;" />
+    <swiper-item wx:for="{{ data }}">
+        <swiper-lite-item data="{{ index }}" />
     </swiper-item>
 </swiper>
-<view style="background:#000;height:50px;" />
-<swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ [1, 2, 3] }}">
-    <!-- <swiper-lite-item>
-        <view style="background: yellow" />
-    </swiper-lite-item>
-    <swiper-lite-item>
-        <view style="background: blue" />
-    </swiper-lite-item>
-    <swiper-lite-item>
-        <view style="background: green" />
-    </swiper-lite-item>
-    <swiper-lite-item>
-        <view style="background: black" />
-    </swiper-lite-item> -->
-</swiper-lite>
+<view style="height: 100px"></view>
+<!-- <swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ data }}">
+</swiper-lite> -->
