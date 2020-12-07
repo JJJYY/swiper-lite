@@ -5,15 +5,32 @@ const systemInfo = getSystemInfo()
 Component({
   properties: {
     data: Array,
+    key: String,
+    circular: {
+      type: Boolean,
+      value: false
+    },
+    current: {
+      type: Number,
+      value: 0
+    },
     width: {
       type: Number,
       value: systemInfo.windowWidth
+    },
+    height: {
+      type: Number,
+      value: systemInfo.windowHeight
+    }
+  },
+  observers: {
+    circular() {
     }
   },
   data: {
     windowWidth: systemInfo.windowWidth,
     windowHeight: systemInfo.windowHeight,
-    current: 0
+    current: 0,
   },
   lifetimes: {
     created() {
@@ -23,8 +40,6 @@ Component({
         windowWidth: systemInfo.windowWidth,
         windowHeight: systemInfo.windowHeight
       })
-
-      this.selectAllItem()
     }
   },
   methods: {

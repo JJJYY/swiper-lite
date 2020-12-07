@@ -1,0 +1,25 @@
+<wxs src="./helper/swiper.wxs" module="swiper" />
+<view
+    style="width:{{width}}px;overflow:hidden;"
+>
+    <view
+        class="swiper-lite"
+        bindtouchstart="{{ swiper.touchstart }}"
+        bindtouchmove="{{ swiper.touchmove }}"
+        bindtouchend="{{ swiper.touchend }}"
+        bindtouchcancel="{{ swiper.touchcancel }}"
+        change:attrs="{{ swiper.attrsObserver }}"
+        attrs="{{ { width: width, height: height, current: current, circular: circular, length: data.length } }}"
+        style="width:{{width * data.length}}px;"
+    >
+        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{width}}px">
+            <swiper-lite-item data="{{ data[data.length - 1] }}"/>
+        </view>
+        <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{width}}px">
+            <swiper-lite-item data="{{ item }}"/>
+        </view>
+        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{width}}px">
+            <swiper-lite-item data="{{ data[0] }}"/>
+        </view>
+    </view>
+</view>

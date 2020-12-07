@@ -1,8 +1,8 @@
-<swiper>
+<!-- <swiper>
     <swiper-item wx:for="{{ data }}">
         <swiper-lite-item data="{{ index }}" />
     </swiper-item>
-</swiper>
+</swiper> -->
 <view style="height: 100px"></view>
-<!-- <swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ data }}">
-</swiper-lite> -->
+<swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ data }}" circular="{{ true }}">
+</swiper-lite>

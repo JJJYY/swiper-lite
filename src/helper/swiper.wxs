@@ -4,10 +4,23 @@ var swiperContainer = null
 var swiperLiteItems = []
 var startXY = [0, 0]
 var startTime = 0
-var offsetCache = []
-var requestAnimationFrame = function () {}
+var offsetCache = [0, 0]
+var noop = function () {}
+var requestAnimationFrame = noop
+
+var attrs = {}
+
+var current = 0
+
+var resistanceRatio = 0.5
+
+// 计算边界抵抗后的偏移值
+function resistance (offset, ratio) {
+    return offset * ratio
+}
 
 function transformSwiper (offset, hooks) {
+    hooks = hooks || {}
     if (hooks.before) hooks.before(offset)
 
     // for (var i = 0; i < swiperLiteItems.length; i++) {
@@ -30,12 +43,19 @@ function transformSwiper (offset, hooks) {
     if (hooks.after) hooks.after(offset)
 }
 
+function isLimit (offset, dir, limit) {
+    return (
+        offset[0] === 0 && dir[0] > 0
+        || offset[0] === 0 && dir[0] > 0
+    )
+}
+
 function createAnimationTransform(time, current, target) {
     var lastTime = 0
     var leftOffsetX = target[0]
-    // var offsetY = offset[1]
 
     function animation (onAnimationEnd) {
+        onAnimationEnd = onAnimationEnd || noop
         var now = Date.now()
         if (lastTime <= 0) {
             lastTime = now
@@ -78,37 +98,89 @@ function touchstart (event, ownerInstance) {
 function touchmove (event, ownerInstance) {
     var touch = event.touches[0]
     var offsetX = touch.pageX - startXY[0]
-    // var width = event.currentTarget.dataset.width
+    var width = event.currentTarget.dataset.width
+
+    // current 0 边界抵抗
+    if (isLimit(offsetCache, [offsetX])) {
+        offsetX = resistance(offsetX, resistanceRatio)
+    }
 
     transformSwiper([ offsetX ], {
         before: function (offset) {
-            console.log(JSON.stringify(offsetCache))
-            offset[0] = (offsetCache[0] || 0) + offset[0]
+            offset[0] = offsetCache[0] + offset[0]
         }
     })
 }
 
 function touchend (event, ownerInstance) {
     var touch = event.changedTouches[0]
+    // 这里要重新计算，感觉是不是不太好
     var offsetX = touch.pageX - startXY[0]
-    var time = Date.now() - startTime
-    var width = event.currentTarget.dataset.width
 
+    var time = Date.now() - startTime
+    var width = attrs.width
+    
+    var duration = 200
+
+    // 在边界回弹
+    if (isLimit(offsetCache, [offsetX])) {
+        offsetX = resistance(offsetX, resistanceRatio)
+        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
+        return
+    }
+
+    var nextCurrent = current
+    // 正常滑动
     if (
         Math.abs(offsetX) > 200 ||
         Math.abs(offsetX) / time >= 0.5
     ) {
         if (offsetX > 0) {
-            createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0) + width])(function () {
-                offsetCache[0] = (offsetCache[0] || 0) + width
+            createAnimationTransform(
+                duration,
+                [offsetCache[0] + offsetX],
+                // TODO: 支持同时改变多个 Math.max(offsetX / width, 1)
+                [offsetCache[0] + width]
+            )(function () {
+                offsetCache[0] = offsetCache[0] + width
             })
+
+            nextCurrent -= 1
         } else {
-            createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0) + width * -1])(function () {
-                offsetCache[0] = (offsetCache[0] || 0) + width * -1
+            createAnimationTransform(
+                duration,
+                [offsetCache[0] + offsetX],
+                [offsetCache[0] + width * -1]
+            )(function () {
+                offsetCache[0] = offsetCache[0] + width * -1
             })
+
+            nextCurrent += 1
         }
     } else {
-        createAnimationTransform(200, [(offsetCache[0] || 0) + offsetX], [(offsetCache[0] || 0)])(function () {
+        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
+    }
+
+    console.log(current, nextCurrent)
+    if (current !== nextCurrent) {
+        swiperLiteItems[current].removeClass('swiper-lite-current')
+        swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
+
+        current = nextCurrent
+    }
+}
+
+function attrsObserver (newValue, oldValue, ownerInstance) {
+    swiperContainer = ownerInstance.selectComponent('.swiper-lite')
+    swiperLiteItems = ownerInstance.selectAllComponents('.swiper-lite-item')
+
+    attrs = newValue
+
+    if (newValue.circular && oldValue && !oldValue.circular) {
+        transformSwiper([ newValue.width * -1 ], {
+            after: function () {
+                offsetCache[0] = offsetCache[0] + newValue.width * -1
+            }
         })
     }
 }
@@ -117,5 +189,6 @@ module.exports = {
     touchstart: touchstart,
     touchmove: touchmove,
     touchend: touchend,
-    touchcancel: touchend
+    touchcancel: touchend,
+    attrsObserver: attrsObserver
 }
