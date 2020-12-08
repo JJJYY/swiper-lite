@@ -4,5 +4,4 @@
     </swiper-item>
 </swiper> -->
 <view style="height: 100px"></view>
-<swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ data }}" circular="{{ true }}">
-</swiper-lite>
+<swiper-lite generic:swiper-lite-item="swiper-lite-item" data="{{ data }}" circular="{{ true }}"/>

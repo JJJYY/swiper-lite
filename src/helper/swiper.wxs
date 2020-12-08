@@ -23,19 +23,6 @@ function transformSwiper (offset, hooks) {
     hooks = hooks || {}
     if (hooks.before) hooks.before(offset)
 
-    // for (var i = 0; i < swiperLiteItems.length; i++) {
-    //     if (hooks.beforeEach) hooks.beforeEach(offset, i, swiperLiteItems[i])
-    //
-    //     var item = swiperLiteItems[i]
-    //     if (item) {
-    //         item.setStyle({
-    //             transform: 'translate(' + offset[0] + 'px)'
-    //         })
-    //     }
-    //
-    //     if (hooks.afterEach) hooks.afterEach(offset, i, swiperLiteItems[i])
-    // }
-
     swiperContainer.setStyle({
         transform: 'translate(' + offset[0] + 'px)'
     })
@@ -43,10 +30,12 @@ function transformSwiper (offset, hooks) {
     if (hooks.after) hooks.after(offset)
 }
 
-function isLimit (offset, dir, limit) {
+function isLimit (offset, dir) {
+    var limit = attrs.width * (attrs.length - 1 + (attrs.circular ? 2 : 0)) * -1
+
     return (
         offset[0] === 0 && dir[0] > 0
-        || offset[0] === 0 && dir[0] > 0
+        || offset[0] === limit && dir[0] < 0
     )
 }
 
@@ -98,7 +87,6 @@ function touchstart (event, ownerInstance) {
 function touchmove (event, ownerInstance) {
     var touch = event.touches[0]
     var offsetX = touch.pageX - startXY[0]
-    var width = event.currentTarget.dataset.width
 
     // current 0 边界抵抗
     if (isLimit(offsetCache, [offsetX])) {
@@ -110,6 +98,16 @@ function touchmove (event, ownerInstance) {
             offset[0] = offsetCache[0] + offset[0]
         }
     })
+}
+
+function changeCurrent (nextCurrent) {
+    console.log(current, nextCurrent)
+    if (current !== nextCurrent) {
+        swiperLiteItems[current].removeClass('swiper-lite-current')
+        swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
+
+        current = nextCurrent
+    }
 }
 
 function touchend (event, ownerInstance) {
@@ -136,6 +134,7 @@ function touchend (event, ownerInstance) {
         Math.abs(offsetX) / time >= 0.5
     ) {
         if (offsetX > 0) {
+            // 上一个
             createAnimationTransform(
                 duration,
                 [offsetCache[0] + offsetX],
@@ -143,30 +142,39 @@ function touchend (event, ownerInstance) {
                 [offsetCache[0] + width]
             )(function () {
                 offsetCache[0] = offsetCache[0] + width
-            })
 
-            nextCurrent -= 1
+                if (attrs.circular) {
+                    if (current === 0) {
+                        offsetCache[0] = attrs.length * attrs.width * -1
+                        transformSwiper([ offsetCache[0] ])
+                    }
+                }
+
+                nextCurrent = (nextCurrent + attrs.length - 1) % attrs.length
+                changeCurrent(nextCurrent)
+            })
         } else {
+            // 下一个
             createAnimationTransform(
                 duration,
                 [offsetCache[0] + offsetX],
                 [offsetCache[0] + width * -1]
             )(function () {
                 offsetCache[0] = offsetCache[0] + width * -1
-            })
 
-            nextCurrent += 1
+                if (attrs.circular) {
+                    if (current === attrs.length - 1) {
+                        offsetCache[0] = width * -1
+                        transformSwiper([ offsetCache[0] ])
+                    }
+                }
+
+                nextCurrent = (nextCurrent + attrs.length + 1) % attrs.length
+                changeCurrent(nextCurrent)
+            })
         }
     } else {
         createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
-    }
-
-    console.log(current, nextCurrent)
-    if (current !== nextCurrent) {
-        swiperLiteItems[current].removeClass('swiper-lite-current')
-        swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
-
-        current = nextCurrent
     }
 }
 

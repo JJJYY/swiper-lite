@@ -10,7 +10,7 @@
         bindtouchcancel="{{ swiper.touchcancel }}"
         change:attrs="{{ swiper.attrsObserver }}"
         attrs="{{ { width: width, height: height, current: current, circular: circular, length: data.length } }}"
-        style="width:{{width * data.length}}px;"
+        style="width:{{width * (data.length + (circular ? 2 : 0))}}px;"
     >
         <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{width}}px">
             <swiper-lite-item data="{{ data[data.length - 1] }}"/>
