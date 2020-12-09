@@ -1,6 +1,6 @@
 <wxs src="./helper/swiper.wxs" module="swiper" />
 <view
-    style="width:{{width}}px;overflow:hidden;"
+    style="width:{{realWidth}}px;overflow:hidden;padding: 0 {{ nextMargin }}px 0 {{ prevMargin }}px;"
 >
     <view
         class="swiper-lite"
@@ -9,16 +9,22 @@
         bindtouchend="{{ swiper.touchend }}"
         bindtouchcancel="{{ swiper.touchcancel }}"
         change:attrs="{{ swiper.attrsObserver }}"
-        attrs="{{ { width: width, height: height, current: current, circular: circular, length: data.length } }}"
-        style="width:{{width * (data.length + (circular ? 2 : 0))}}px;"
+        attrs="{{ {
+            width: realWidth,
+            height: height,
+            current: current,
+            circular: circular,
+            length: data.length
+        } }}"
+        style="width: {{ realWidth * (data.length + (circular ? 2 : 0))}}px;"
     >
-        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{width}}px">
+        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{realWidth}}px;">
             <swiper-lite-item data="{{ data[data.length - 1] }}"/>
         </view>
-        <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{width}}px">
+        <view wx:for="{{ data }}" class="swiper-lite-item" style="width:{{realWidth}}px;">
             <swiper-lite-item data="{{ item }}"/>
         </view>
-        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{width}}px">
+        <view wx:if="{{ circular }}" class="swiper-lite-item" style="width:{{realWidth}}px;">
             <swiper-lite-item data="{{ data[0] }}"/>
         </view>
     </view>

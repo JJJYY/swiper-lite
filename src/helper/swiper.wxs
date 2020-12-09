@@ -14,6 +14,14 @@ var current = 0
 
 var resistanceRatio = 0.5
 
+function getSwiperContainer (instance) {
+    return instance.selectComponent('.swiper-lite')
+}
+
+function getSwiperLiteItems (instance) {
+    return instance.selectAllComponents('.swiper-lite-item')
+}
+
 // 计算边界抵抗后的偏移值
 function resistance (offset, ratio) {
     return offset * ratio
@@ -74,9 +82,10 @@ function createAnimationTransform(time, current, target) {
 }
 
 function touchstart (event, ownerInstance) {
-    swiperContainer = ownerInstance.selectComponent('.swiper-lite')
-    swiperLiteItems = ownerInstance.selectAllComponents('.swiper-lite-item')
+    swiperContainer = getSwiperContainer(ownerInstance)
+    swiperLiteItems = getSwiperLiteItems(ownerInstance)
     requestAnimationFrame = ownerInstance.requestAnimationFrame
+
     startTime = Date.now()
     var touch = event.touches[0]
     if (touch) {
@@ -87,6 +96,7 @@ function touchstart (event, ownerInstance) {
 function touchmove (event, ownerInstance) {
     var touch = event.touches[0]
     var offsetX = touch.pageX - startXY[0]
+    var offsetY = touch.pageY - startXY[1]
 
     // current 0 边界抵抗
     if (isLimit(offsetCache, [offsetX])) {
@@ -98,13 +108,20 @@ function touchmove (event, ownerInstance) {
             offset[0] = offsetCache[0] + offset[0]
         }
     })
+
+    ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
 }
 
 function changeCurrent (nextCurrent) {
-    console.log(current, nextCurrent)
+    console.log(current, nextCurrent, swiperLiteItems)
     if (current !== nextCurrent) {
-        swiperLiteItems[current].removeClass('swiper-lite-current')
-        swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
+        if (attrs.circular) {
+            swiperLiteItems[current + 1].removeClass('swiper-lite-current')
+            swiperLiteItems[nextCurrent + 1].addClass('swiper-lite-current')
+        } else {
+            swiperLiteItems[current].removeClass('swiper-lite-current')
+            swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
+        }
 
         current = nextCurrent
     }
@@ -114,6 +131,7 @@ function touchend (event, ownerInstance) {
     var touch = event.changedTouches[0]
     // 这里要重新计算，感觉是不是不太好
     var offsetX = touch.pageX - startXY[0]
+    var offsetY = touch.pageY - startXY[1]
 
     var time = Date.now() - startTime
     var width = attrs.width
@@ -135,6 +153,8 @@ function touchend (event, ownerInstance) {
     ) {
         if (offsetX > 0) {
             // 上一个
+            nextCurrent = (nextCurrent + attrs.length - 1) % attrs.length
+
             createAnimationTransform(
                 duration,
                 [offsetCache[0] + offsetX],
@@ -149,11 +169,13 @@ function touchend (event, ownerInstance) {
                         transformSwiper([ offsetCache[0] ])
                     }
                 }
-
-                nextCurrent = (nextCurrent + attrs.length - 1) % attrs.length
                 changeCurrent(nextCurrent)
+                
+                ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
             })
         } else {
+            nextCurrent = (nextCurrent + attrs.length + 1) % attrs.length
+
             // 下一个
             createAnimationTransform(
                 duration,
@@ -168,19 +190,23 @@ function touchend (event, ownerInstance) {
                         transformSwiper([ offsetCache[0] ])
                     }
                 }
-
-                nextCurrent = (nextCurrent + attrs.length + 1) % attrs.length
                 changeCurrent(nextCurrent)
+
+                ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
             })
         }
     } else {
-        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
+        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])(function () {
+            ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
+        })
     }
+
+    ownerInstance.triggerEvent('change', { current: nextCurrent })
 }
 
 function attrsObserver (newValue, oldValue, ownerInstance) {
-    swiperContainer = ownerInstance.selectComponent('.swiper-lite')
-    swiperLiteItems = ownerInstance.selectAllComponents('.swiper-lite-item')
+    swiperContainer = getSwiperContainer(ownerInstance)
+    swiperLiteItems = getSwiperLiteItems(ownerInstance)
 
     attrs = newValue
 

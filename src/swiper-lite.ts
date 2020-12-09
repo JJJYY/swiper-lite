@@ -21,25 +21,28 @@ Component({
     height: {
       type: Number,
       value: systemInfo.windowHeight
+    },
+    nextMargin: {
+      type: Number,
+      value: 0
+    },
+    prevMargin: {
+      type: Number,
+      value: 0
     }
   },
   observers: {
-    circular() {
+    'width, prevMargin, nextMargin': function (width, prevMargin, nextMargin) {
+      this.setData({
+        realWidth: width - prevMargin - nextMargin
+      })
     }
   },
   data: {
-    windowWidth: systemInfo.windowWidth,
-    windowHeight: systemInfo.windowHeight,
-    current: 0,
+    realWidth: systemInfo.windowWidth
   },
   lifetimes: {
     created() {
-      const systemInfo = getSystemInfo()
-
-      this.setData({
-        windowWidth: systemInfo.windowWidth,
-        windowHeight: systemInfo.windowHeight
-      })
     }
   },
   methods: {
