@@ -10,7 +10,7 @@ var requestAnimationFrame = noop
 
 var attrs = {}
 
-var current = 0
+var current = -1
 
 var resistanceRatio = 0.5
 
@@ -41,21 +41,12 @@ function transformSwiper (offset, hooks) {
     if (hooks.after) hooks.after(offset)
 }
 
-function isLimit (offset, dir) {
-    var limit = attrs.width * (attrs.length - 1 + (attrs.circular ? 2 : 0)) * -1
-    var mainOffset = offset[0]
-    var mainDir = dir[0]
+function isLimit (dir) {
+    var mainDir = attrs.vertical ? dir[1] : dir[0]
 
-    if (attrs.vertical) {
-        limit = attrs.height * (attrs.length - 1 + (attrs.circular ? 2 : 0)) * -1
-        mainOffset = offset[1]
-        mainDir = dir[1]
-    }
-
-    console.log('边界抵抗: ', mainOffset, limit)
     return (
-        mainOffset === 0 && mainDir > 0
-        || mainOffset === limit && mainDir < 0
+        (current === 0 && mainDir > 0)
+        || (current === attrs.length - 1 && mainDir < 0)
     )
 }
 
@@ -97,6 +88,40 @@ function createAnimationTransform(time, current, target) {
     return animation
 }
 
+function setTimeout (callback, interval) {
+    interval = interval || 0
+    callback = callback || noop
+
+    var lastTime = Date.now()
+    function waitPlay () {
+        requestAnimationFrame(function () {
+            var now = Date.now()
+            if (now - lastTime >= interval) {
+                lastTime = now
+
+                callback()
+            } else {
+                waitPlay()
+            }
+        })
+    }
+
+    waitPlay()
+}
+
+function startAutoplay (interval, ownerInstance) {
+    interval = interval || 2000
+
+    setTimeout(function () {
+        transTarget([0, 0], ownerInstance)
+        var limit = isLimit([-1, -1])
+
+        if (!limit || (limit && attrs.circular)) {
+            startAutoplay(interval, ownerInstance)
+        }
+    }, interval)
+}
+
 function touchstart (event, ownerInstance) {
     swiperContainer = getSwiperContainer(ownerInstance)
     swiperLiteItems = getSwiperLiteItems(ownerInstance)
@@ -115,7 +140,7 @@ function touchmove (event, ownerInstance) {
     var offsetY = touch.pageY - startXY[1]
 
     // 边界抵抗
-    if (isLimit(offsetCache, [offsetX, offsetY])) {
+    if (isLimit([offsetX, offsetY])) {
         offsetX = resistance(offsetX, resistanceRatio)
         offsetY = resistance(offsetY, resistanceRatio)
     }
@@ -134,13 +159,11 @@ function touchmove (event, ownerInstance) {
 
 function changeCurrent (nextCurrent) {
     if (current !== nextCurrent) {
-        if (attrs.circular) {
-            swiperLiteItems[current + 1].removeClass('swiper-lite-current')
-            swiperLiteItems[nextCurrent + 1].addClass('swiper-lite-current')
-        } else {
-            swiperLiteItems[current].removeClass('swiper-lite-current')
-            swiperLiteItems[nextCurrent].addClass('swiper-lite-current')
-        }
+        var currentItem = attrs.circular ? swiperLiteItems[current + 1] : swiperLiteItems[current]
+        var nextItem = attrs.circular ? swiperLiteItems[nextCurrent + 1] : swiperLiteItems[nextCurrent]
+        
+        currentItem && currentItem.removeClass('swiper-lite-current')
+        nextItem && nextItem.addClass('swiper-lite-current')
 
         current = nextCurrent
     }
@@ -151,6 +174,13 @@ function touchend (event, ownerInstance) {
     // 这里要重新计算，感觉是不是不太好
     var offsetX = touch.pageX - startXY[0]
     var offsetY = touch.pageY - startXY[1]
+
+    transTarget([offsetX, offsetY], ownerInstance)
+}
+
+function transTarget (offset, ownerInstance) {
+    var offsetX = offset[0]
+    var offsetY = offset[1]
     var dx = offsetX
     var dy = offsetY
 
@@ -159,12 +189,16 @@ function touchend (event, ownerInstance) {
     var height = attrs.height
     
     var duration = 200
-
+ 
     // 边界回弹
-    if (isLimit(offsetCache, [offsetX, offsetY])) {
+    if (isLimit([offsetX, offsetY])) {
         offsetX = resistance(offsetX, resistanceRatio)
         offsetY = resistance(offsetY, resistanceRatio)
-        var offset = attrs.vertical ? [offsetCache[0], offsetCache[1] + offsetY] : [offsetCache[0] + offsetX, offsetCache[1]]
+
+        var offset = attrs.vertical
+            ? [offsetCache[0], offsetCache[1] + offsetY]
+            : [offsetCache[0] + offsetX, offsetCache[1]]
+
         createAnimationTransform(duration, offset, offsetCache)()
         return
     }
@@ -181,8 +215,9 @@ function touchend (event, ownerInstance) {
     }
     // 正常滑动
     if (
-        Math.abs(mainOffset) > 200 ||
-        Math.abs(mainOffset) / time >= 0.5
+        Math.abs(mainOffset) > 200
+        || Math.abs(mainOffset) / time >= 0.5
+        || attrs.autoplay
     ) {
         if (mainOffset > 0) {
             // 上一个
@@ -209,6 +244,7 @@ function touchend (event, ownerInstance) {
                 ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
             })
         } else {
+            console.log('mainOffset: ', mainOffset, offsetY)
             nextCurrent = (nextCurrent + attrs.length + 1) % attrs.length
 
             // 下一个
@@ -233,7 +269,11 @@ function touchend (event, ownerInstance) {
             })
         }
     } else {
-        createAnimationTransform(duration, [offsetCache[0] + offsetX, offsetCache[1] + offsetY], offsetCache)(function () {
+        createAnimationTransform(
+            duration,
+            [offsetCache[0] + offsetX, offsetCache[1] + offsetY],
+            offsetCache
+        )(function () {
             ownerInstance.triggerEvent('animationfinish', { dx: dx, dy: dy })
         })
     }
@@ -242,6 +282,7 @@ function touchend (event, ownerInstance) {
 }
 
 function attrsObserver (newValue, oldValue, ownerInstance) {
+    requestAnimationFrame = ownerInstance.requestAnimationFrame
     swiperContainer = getSwiperContainer(ownerInstance)
     swiperLiteItems = getSwiperLiteItems(ownerInstance)
 
@@ -258,6 +299,15 @@ function attrsObserver (newValue, oldValue, ownerInstance) {
                 }
             }
         })
+    }
+
+    var current = newValue.current || 0
+    if (current >= 0) {
+        changeCurrent(current)
+    }
+
+    if (attrs.autoplay) {
+        startAutoplay(attrs.interval, ownerInstance)
     }
 }
 

@@ -33,6 +33,14 @@ Component({
     vertical: {
       type: Boolean,
       value: false
+    },
+    autoplay: {
+      type: Boolean,
+      value: false
+    },
+    interval: {
+      type: Number,
+      value: 5000
     }
   },
   observers: {
