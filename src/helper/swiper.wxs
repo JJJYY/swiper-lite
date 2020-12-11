@@ -43,10 +43,19 @@ function transformSwiper (offset, hooks) {
 
 function isLimit (offset, dir) {
     var limit = attrs.width * (attrs.length - 1 + (attrs.circular ? 2 : 0)) * -1
+    var mainOffset = offset[0]
+    var mainDir = dir[0]
 
+    if (attrs.vertical) {
+        limit = attrs.height * (attrs.length - 1 + (attrs.circular ? 2 : 0)) * -1
+        mainOffset = offset[1]
+        mainDir = dir[1]
+    }
+
+    console.log('边界抵抗: ', mainOffset, limit)
     return (
-        offset[0] === 0 && dir[0] > 0
-        || offset[0] === limit && dir[0] < 0
+        mainOffset === 0 && mainDir > 0
+        || mainOffset === limit && mainDir < 0
     )
 }
 
@@ -105,9 +114,10 @@ function touchmove (event, ownerInstance) {
     var offsetX = touch.pageX - startXY[0]
     var offsetY = touch.pageY - startXY[1]
 
-    // current 0 边界抵抗
-    if (isLimit(offsetCache, [offsetX])) {
+    // 边界抵抗
+    if (isLimit(offsetCache, [offsetX, offsetY])) {
         offsetX = resistance(offsetX, resistanceRatio)
+        offsetY = resistance(offsetY, resistanceRatio)
     }
 
     var offset = attrs.vertical ? [ 0, offsetY ] : [ offsetX, 0 ]
@@ -119,7 +129,7 @@ function touchmove (event, ownerInstance) {
         }
     })
 
-    ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
+    ownerInstance.triggerEvent('transition', { dx: offsetX, dy: offsetY })
 }
 
 function changeCurrent (nextCurrent) {
@@ -141,6 +151,8 @@ function touchend (event, ownerInstance) {
     // 这里要重新计算，感觉是不是不太好
     var offsetX = touch.pageX - startXY[0]
     var offsetY = touch.pageY - startXY[1]
+    var dx = offsetX
+    var dy = offsetY
 
     var time = Date.now() - startTime
     var width = attrs.width
@@ -148,12 +160,14 @@ function touchend (event, ownerInstance) {
     
     var duration = 200
 
-    // 在边界回弹
-    // if (isLimit(offsetCache, [offsetX])) {
-    //     offsetX = resistance(offsetX, resistanceRatio)
-    //     createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
-    //     return
-    // }
+    // 边界回弹
+    if (isLimit(offsetCache, [offsetX, offsetY])) {
+        offsetX = resistance(offsetX, resistanceRatio)
+        offsetY = resistance(offsetY, resistanceRatio)
+        var offset = attrs.vertical ? [offsetCache[0], offsetCache[1] + offsetY] : [offsetCache[0] + offsetX, offsetCache[1]]
+        createAnimationTransform(duration, offset, offsetCache)()
+        return
+    }
 
     var nextCurrent = current
 
@@ -165,7 +179,6 @@ function touchend (event, ownerInstance) {
         height = 0
         offsetY = 0
     }
-    console.log(width, height, offsetX, offsetY)
     // 正常滑动
     if (
         Math.abs(mainOffset) > 200 ||
@@ -216,12 +229,12 @@ function touchend (event, ownerInstance) {
                 }
                 changeCurrent(nextCurrent)
 
-                ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
+                ownerInstance.triggerEvent('animationfinish', { dx: dx, dy: dy })
             })
         }
     } else {
         createAnimationTransform(duration, [offsetCache[0] + offsetX, offsetCache[1] + offsetY], offsetCache)(function () {
-            ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
+            ownerInstance.triggerEvent('animationfinish', { dx: dx, dy: dy })
         })
     }
 
