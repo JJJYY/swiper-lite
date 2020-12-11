@@ -1,6 +1,9 @@
 .swiper-lite {
-    white-space: nowrap;
     overflow: hidden;
+}
+
+.swiper-lite.horizontal {
+    white-space: nowrap;
 }
 
 .swiper-lite-item {

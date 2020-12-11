@@ -92,5 +92,5 @@ module.exports = {
     }
   },
 
-  copy: ['./helper'], // 将会复制到目标目录
+  copy: ['./helper', './swiper-item'], // 将会复制到目标目录
 }

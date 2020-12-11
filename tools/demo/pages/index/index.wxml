@@ -8,7 +8,9 @@
     generic:swiper-lite-item="swiper-lite-item"
     data="{{ data }}"
     circular="{{ true }}"
-    height="600"
+    height="200"
     next-margin="10"
     prev-margin="10"
+    props="{{ { test: 111 } }}"
+    vertical="{{ true }}"
 />

@@ -29,17 +29,29 @@ Component({
     prevMargin: {
       type: Number,
       value: 0
+    },
+    vertical: {
+      type: Boolean,
+      value: false
     }
   },
   observers: {
-    'width, prevMargin, nextMargin': function (width, prevMargin, nextMargin) {
+    // realWidth
+    'width, prevMargin, nextMargin, vertical': function (width, prevMargin, nextMargin, vertical) {
       this.setData({
-        realWidth: width - prevMargin - nextMargin
+        realWidth: width - (vertical ? 0 : (prevMargin + nextMargin))
+      })
+    },
+    // realHeight
+    'height, prevMargin, nextMargin, vertical': function (height, prevMargin, nextMargin, vertical) {
+      this.setData({
+        realHeight: height - (vertical ? 0 : (prevMargin + nextMargin))
       })
     }
   },
   data: {
-    realWidth: systemInfo.windowWidth
+    realWidth: systemInfo.windowWidth,
+    realHeight: systemInfo.windowHeight
   },
   lifetimes: {
     created() {

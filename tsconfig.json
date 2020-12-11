@@ -17,7 +17,7 @@
     "node_modules/miniprogram-api-typings/index.d.ts"
   ],
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts", "src/swiper-item/index.js"
   ],
   "exclude": [
     "node_modules"

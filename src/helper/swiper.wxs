@@ -31,8 +31,11 @@ function transformSwiper (offset, hooks) {
     hooks = hooks || {}
     if (hooks.before) hooks.before(offset)
 
+    var offsetX = offset[0] || 0
+    var offsetY = offset[1] || 0
+
     swiperContainer.setStyle({
-        transform: 'translate(' + offset[0] + 'px)'
+        transform: 'translate(' + offsetX + 'px,' + offsetY + 'px)'
     })
 
     if (hooks.after) hooks.after(offset)
@@ -50,6 +53,7 @@ function isLimit (offset, dir) {
 function createAnimationTransform(time, current, target) {
     var lastTime = 0
     var leftOffsetX = target[0]
+    var leftOffsetY = target[1]
 
     function animation (onAnimationEnd) {
         onAnimationEnd = onAnimationEnd || noop
@@ -62,11 +66,14 @@ function createAnimationTransform(time, current, target) {
 
         requestAnimationFrame(function () {
             var duration = now - lastTime
-            var offsetX = (target[0] - current[0]) * Math.min(1, (duration / time))
+            var animationTime = Math.min(1, (duration / time))
+            var offsetX = (target[0] - current[0]) * animationTime
+            var offsetY = (target[1] - current[1]) * animationTime
 
-            transformSwiper([ current[0] + offsetX ], {
+            transformSwiper([ current[0] + offsetX, current[1] + offsetY ], {
                 after: function () {
                     leftOffsetX -= offsetX
+                    leftOffsetY -= offsetY
                 }
             })
 
@@ -103,9 +110,12 @@ function touchmove (event, ownerInstance) {
         offsetX = resistance(offsetX, resistanceRatio)
     }
 
-    transformSwiper([ offsetX ], {
+    var offset = attrs.vertical ? [ 0, offsetY ] : [ offsetX, 0 ]
+
+    transformSwiper(offset, {
         before: function (offset) {
             offset[0] = offsetCache[0] + offset[0]
+            offset[1] = offsetCache[1] + offset[1]
         }
     })
 
@@ -113,7 +123,6 @@ function touchmove (event, ownerInstance) {
 }
 
 function changeCurrent (nextCurrent) {
-    console.log(current, nextCurrent, swiperLiteItems)
     if (current !== nextCurrent) {
         if (attrs.circular) {
             swiperLiteItems[current + 1].removeClass('swiper-lite-current')
@@ -135,38 +144,51 @@ function touchend (event, ownerInstance) {
 
     var time = Date.now() - startTime
     var width = attrs.width
+    var height = attrs.height
     
     var duration = 200
 
     // 在边界回弹
-    if (isLimit(offsetCache, [offsetX])) {
-        offsetX = resistance(offsetX, resistanceRatio)
-        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
-        return
-    }
+    // if (isLimit(offsetCache, [offsetX])) {
+    //     offsetX = resistance(offsetX, resistanceRatio)
+    //     createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])()
+    //     return
+    // }
 
     var nextCurrent = current
+
+    var mainOffset = attrs.vertical ? offsetY : offsetX
+    if (attrs.vertical) {
+        width = 0
+        offsetX = 0
+    } else {
+        height = 0
+        offsetY = 0
+    }
+    console.log(width, height, offsetX, offsetY)
     // 正常滑动
     if (
-        Math.abs(offsetX) > 200 ||
-        Math.abs(offsetX) / time >= 0.5
+        Math.abs(mainOffset) > 200 ||
+        Math.abs(mainOffset) / time >= 0.5
     ) {
-        if (offsetX > 0) {
+        if (mainOffset > 0) {
             // 上一个
             nextCurrent = (nextCurrent + attrs.length - 1) % attrs.length
 
             createAnimationTransform(
                 duration,
-                [offsetCache[0] + offsetX],
+                [offsetCache[0] + offsetX, offsetCache[1] + offsetY],
                 // TODO: 支持同时改变多个 Math.max(offsetX / width, 1)
-                [offsetCache[0] + width]
+                [offsetCache[0] + width, offsetCache[1] + height]
             )(function () {
                 offsetCache[0] = offsetCache[0] + width
+                offsetCache[1] = offsetCache[1] + height
 
                 if (attrs.circular) {
                     if (current === 0) {
-                        offsetCache[0] = attrs.length * attrs.width * -1
-                        transformSwiper([ offsetCache[0] ])
+                        offsetCache[0] = attrs.length * width * -1
+                        offsetCache[1] = attrs.length * height * -1
+                        transformSwiper(offsetCache)
                     }
                 }
                 changeCurrent(nextCurrent)
@@ -179,15 +201,17 @@ function touchend (event, ownerInstance) {
             // 下一个
             createAnimationTransform(
                 duration,
-                [offsetCache[0] + offsetX],
-                [offsetCache[0] + width * -1]
+                [offsetCache[0] + offsetX, offsetCache[1] + offsetY],
+                [offsetCache[0] + width * -1, offsetCache[1] + height * -1]
             )(function () {
                 offsetCache[0] = offsetCache[0] + width * -1
+                offsetCache[1] = offsetCache[1] + height * -1
 
                 if (attrs.circular) {
                     if (current === attrs.length - 1) {
                         offsetCache[0] = width * -1
-                        transformSwiper([ offsetCache[0] ])
+                        offsetCache[1] = height * -1
+                        transformSwiper(offsetCache)
                     }
                 }
                 changeCurrent(nextCurrent)
@@ -196,7 +220,7 @@ function touchend (event, ownerInstance) {
             })
         }
     } else {
-        createAnimationTransform(duration, [offsetCache[0] + offsetX], [offsetCache[0]])(function () {
+        createAnimationTransform(duration, [offsetCache[0] + offsetX, offsetCache[1] + offsetY], offsetCache)(function () {
             ownerInstance.triggerEvent('animationfinish', { dx: offsetX, dy: offsetY })
         })
     }
@@ -211,9 +235,14 @@ function attrsObserver (newValue, oldValue, ownerInstance) {
     attrs = newValue
 
     if (newValue.circular && oldValue && !oldValue.circular) {
-        transformSwiper([ newValue.width * -1 ], {
+        var offsets = attrs.vertical ? [ 0, attrs.height * -1 ] : [ attrs.width * -1 ]
+        transformSwiper(offsets, {
             after: function () {
-                offsetCache[0] = offsetCache[0] + newValue.width * -1
+                if (attrs.vertical) {
+                    offsetCache[1] = offsetCache[1] + attrs.height * -1
+                } else {
+                    offsetCache[0] = offsetCache[0] + attrs.width * -1
+                }
             }
         })
     }

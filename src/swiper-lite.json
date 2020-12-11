@@ -3,6 +3,8 @@
   "usingComponents": {
   },
   "componentGenerics": {
-    "swiper-lite-item": true
+    "swiper-lite-item": {
+      "default" : "./swiper-item/index"
+    }
   }
 }
